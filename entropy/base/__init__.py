@@ -1,12 +1,17 @@
+import datetime
+import functools
+
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.generic import GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.contrib.contenttypes import generic
 
 from filebrowser.fields import FileBrowseField
 
-import datetime
+from ..fields import *
+# from ..models import Image
 
-import functools
 
 # Generic
 
@@ -20,6 +25,7 @@ class GenericMixin(models.Model):
 
     class Meta:
         abstract = True
+
 
 # Text & Content Mixins
 
@@ -74,12 +80,9 @@ class TitleMixin(models.Model):
     Should not be used w/ NameMixin
     """
 
-    title = models.CharField(
-        max_length=1024)
+    title = TitleField()
 
-    short_title = models.CharField(
-        blank=True,
-        max_length=1024)
+    short_title = ShortTitleField()
 
     class Meta:
         abstract = True
@@ -87,29 +90,50 @@ class TitleMixin(models.Model):
     def __unicode__(self):
         return self.title
 
-class SlugMixin(models.Model):
+
+class BaseSlugMixin(object):
     """
     SlugMixin typically depends on TitleMixin to
     create slugs from.  If title is not available
     Name will be attempted.
     """
 
-    slug = models.SlugField(
-        max_length=1024)
-
-    class Meta:
-        abstract = True
+    SLUGIFY_UNIQUELY = False
 
     def save(self, *args, **kwargs):
-        if not self.id:
+        if not self.id and not self.slug:
             try:
                 raw = getattr(self, 'title', None)
                 if not raw:
                     raw = self.name
                 self.slug = slugify(raw)
+
+                if SLUGIFY_UNIQUELY:
+                    pass
+                    # XXX implement
+                    # self.slug = SlugifyUniquely(self._meta.module, self.title)
             except AttributeError:
-                raise Exception("title or name field required for SlugMixin")
-        super(SlugMixin, self).save(*args, **kwargs)
+                pass
+                # XXX implement
+                # raise Exception("title or name field required for SlugMixin")
+        super(BaseSlugMixin, self).save(*args, **kwargs)
+
+
+class SlugMixin(BaseSlugMixin, models.Model):
+
+    slug = SlugField()
+
+    class Meta:
+        abstract = True
+
+
+class SlugUniqueMixin(BaseSlugMixin, models.Model):
+
+    slug = SlugField(unique=True)
+
+    class Meta:
+        abstract = True
+
 
 # Meta & Status Mixins
 
@@ -174,6 +198,7 @@ class StartEndManager(models.Manager):
             end__gte=now,
         )
 
+
 class StartEndBaseMixin(models.Model):
 
     class Meta:
@@ -189,6 +214,7 @@ class StartEndBaseMixin(models.Model):
                 # make this work or move it to a Form?
                 # raise ValidationError("'end' should not be before 'start'")
         super(StartEndBaseMixin, self).save(*args, **kwargs)
+
 
 class StartEndMixin(StartEndBaseMixin):
 
@@ -213,6 +239,7 @@ class StartEndBetaMixin(StartEndBaseMixin):
     class Meta:
         abstract = True
 
+
 # Publishing
 
 class EnabledManager(models.Manager):
@@ -224,6 +251,7 @@ class EnabledManager(models.Manager):
         '''Return only models which are disabled'''
         return self.get_query_set().filter(enabled=False)
 
+
 class EnabledMixin(models.Model):
 
     enabled = models.BooleanField()
@@ -231,10 +259,12 @@ class EnabledMixin(models.Model):
     class Meta:
         abstract = True
 
+
 class PublishingManager(models.Manager):
     def published(self):
         '''Return only models which are enabled'''
         return self.get_query_set().filter().enabled().current()
+
 
 class PublishingMixin(StartEndMixin, EnabledMixin):
     """
@@ -245,6 +275,7 @@ class PublishingMixin(StartEndMixin, EnabledMixin):
 
     class Meta:
         abstract = True
+
 
 # Functional Mixins
 
@@ -257,6 +288,7 @@ class OrderingMixin(models.Model):
     class Meta:
         abstract = True
         ordering = ('order',)
+
 
 # Hofstadter
 
@@ -276,3 +308,65 @@ class PriorityMixin(models.Model):
 
     class Meta:
         abstract = True
+
+
+# Images
+
+
+class ImageMixin(models.Model):
+    """
+    Super neat ImageMixin model.
+
+    Apply this to the model that the Image model is relating
+    to via gfk.
+
+    The images will be available via:
+
+        parent_obj.image -- the first image object, no queries
+        parent_obj.images -- the queryset -- one query which is saved as self._queryset for future use
+
+
+    In templates with Sorl
+
+    {% thumbnail parent_obj.image "200x200" crop="center" as image %}
+        <img src="{{ image.url }}">
+    {% endthumbnail %}
+
+    {% with parent_obj.images as images %}
+    {% for image in images %}
+        {% thumbnail image "200x200" crop="center" as image %}
+            <img src="{{ image.url }}">
+        {% endthumbnail %}
+    {% endfor %}
+    {% endwith %}
+    """
+    image_set = GenericRelation('entropy.Image')
+
+    class Meta:
+        abstract = True
+
+    @property
+    def image(self):
+        try:
+            return self.image_set.all()[0]
+        except IndexError:
+            return None
+
+    @property
+    def images(self):
+        return self.image_set.all()[1:]
+
+    @property
+    def icon(self):
+        try:
+            return self.icons[0]
+        except IndexError:
+            return None
+
+    # # @buffered_property
+    # def icons(self):
+    #     return list(Image.objects.filter(
+    #         content_type=ContentType.objects.get_for_model(self),
+    #         object_id=self.id,
+    #         is_icon=True
+    #     ))
