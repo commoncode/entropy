@@ -3,7 +3,7 @@ from optparse import make_option
 from django.conf import settings
 from django.core.management.base import AppCommand, CommandError
 from django.core.management.color import no_style
-from django.core.management.sql import sql_reset
+from entropy.management.sql import sql_reset
 from django.db import connections, transaction, DEFAULT_DB_ALIAS
 
 class Command(AppCommand):
