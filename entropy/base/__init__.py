@@ -10,6 +10,8 @@ from django.template.defaultfilters import slugify
 from filebrowser.fields import FileBrowseField
 
 from ..fields import *
+from django.conf import settings
+
 # from ..models import Image
 
 
@@ -137,11 +139,22 @@ class SlugUniqueMixin(BaseSlugMixin, models.Model):
 
 # Meta & Status Mixins
 
+"""
+    HTML Metadata Mixin - for all those groovy HTML meta tags that can be important for SEO
+"""
+class MetadataMixin(models.Model):
+    meta_title = models.CharField(max_length=255, blank=True, null=True)
+    meta_description = models.CharField(max_length=255, blank=True, null=True)
+    meta_keywords = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
 class CreatedMixin(models.Model):
 
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
-        'auth.User',
+        getattr(settings, 'AUTH_USER_MODEL', 'auth.User'),      # adds support for custom user models in 1.5
         blank=True,
         null=True, # For now.
         related_name='%(app_label)s_%(class)s_created_by')
@@ -158,9 +171,9 @@ class CreatedMixin(models.Model):
 
 class ModifiedMixin(models.Model):
 
-    modified_at = models.DateTimeField()
+    modified_at = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(
-        'auth.User',
+        getattr(settings, 'AUTH_USER_MODEL', 'auth.User'),      # adds support for custom user models in 1.5
         blank=True,
         null=True, # For now.
         related_name='%(app_label)s_%(class)s_modified_by')   # XXX Should use a template
@@ -178,7 +191,7 @@ class ModifiedMixin(models.Model):
 class OwnerMixin(models.Model):
 
     owned_by = models.ForeignKey(
-        'auth.User',
+        getattr(settings, 'AUTH_USER_MODEL', 'auth.User'),      # adds support for custom user models in 1.5
         blank=True,
         null=True, # For now.
         related_name='%(app_label)s_%(class)s_owned_by')
