@@ -255,6 +255,24 @@ class StartEndBetaMixin(StartEndBaseMixin):
 
 # Publishing
 
+IDEA = 0
+DRAFT = 1
+TEST_DATA = 2
+PUBLISHED = 3
+
+STATUS_CHOICES = (
+    (IDEA, 'Idea'),
+    (DRAFT, 'Draft'),
+    (TEST_DATA, 'Test Data'),
+    (PUBLISHED, 'Published')
+)
+
+class PublishingStatusMixin(models.Model):
+    publishing_status = models.IntegerField(choices=STATUS_CHOICES, default=1)
+
+    class Meta:
+        abstract = True
+
 class EnabledManager(models.Manager):
     def enabled(self):
         '''Return only models which are enabled'''
