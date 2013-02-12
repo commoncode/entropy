@@ -268,7 +268,7 @@ STATUS_CHOICES = (
 )
 
 class PublishingStatusMixin(models.Model):
-    publishing_status = models.IntegerField(choices=STATUS_CHOICES, default=1)
+    publishing_status = models.IntegerField(choices=STATUS_CHOICES, default=DRAFT)
 
     class Meta:
         abstract = True
