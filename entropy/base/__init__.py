@@ -401,3 +401,50 @@ class ImageMixin(models.Model):
     #         object_id=self.id,
     #         is_icon=True
     #     ))
+
+class BaseLinkMixin(models.Model):
+
+    content_object = generic.GenericForeignKey(
+        'content_type',
+        'object_id')
+
+    class Meta:
+        abstract = True
+
+
+class LinkURLMixin(BaseLinkMixin):
+    """
+    Class for generating get_absolute_url from either the
+    linked object, or the overriding url field
+    """
+
+    content_type = models.ForeignKey(
+        'contenttypes.ContentType',
+        blank=True,
+        limit_choices_to={'model__in': LINKABLE_MODELS },
+        null=True)
+    object_id = models.PositiveIntegerField(
+        blank=True,
+        null=True)
+
+    url = models.CharField(
+        blank=True,
+        help_text="Optionally, override and link to an arbitrary URL",
+        max_length=1024)
+
+    class Meta:
+        abstract = True
+
+    def get_absolute_url(self):
+        if self.url:
+            return self.url
+        else:
+            try:
+                return self.content_object.get_absolute_url()
+            except AttributeError:
+                return None
+
+    def clean(self):
+        if self.content_object and self == self.content_object:
+            from django.core.exceptions import ValidationError
+            raise ValidationError("An object should not link to itself.")
