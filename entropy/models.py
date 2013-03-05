@@ -6,6 +6,7 @@ from .fields import EnabledField
 from .base import GenericMixin
 
 
+
 class Image(GenericMixin):
 
     """

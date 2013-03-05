@@ -10,6 +10,7 @@ from django.template.defaultfilters import slugify
 from filebrowser.fields import FileBrowseField
 
 from ..fields import *
+from .. import settings as entropy_settings
 from django.conf import settings
 
 # from ..models import Image
@@ -421,7 +422,7 @@ class LinkURLMixin(BaseLinkMixin):
     content_type = models.ForeignKey(
         'contenttypes.ContentType',
         blank=True,
-        limit_choices_to={'model__in': LINKABLE_MODELS },
+        limit_choices_to={'model__in': entropy_settings.LINKABLE_MODELS },
         null=True)
     object_id = models.PositiveIntegerField(
         blank=True,
