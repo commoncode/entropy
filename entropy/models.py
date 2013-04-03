@@ -1,10 +1,10 @@
 from django.db import models
+from django.contrib.contenttypes import generic
 
 from filebrowser.fields import FileBrowseField
 
 from .fields import EnabledField
 from .base import GenericMixin
-
 
 
 class Image(GenericMixin):
@@ -61,3 +61,12 @@ class Image(GenericMixin):
         return super(Image, self).save(*args, **kwargs)
 
 
+class Attribute(GenericMixin):
+    '''Generic Attribute'''
+    name = models.SlugField(max_length=256)
+    value = models.CharField(max_length=2048)
+
+    class Meta:
+        ordering = ('name',)
+    def __unicode__(self): # pragma: no cover
+        return u'%s=%s' % (self.name, self.value,)
