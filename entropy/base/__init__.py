@@ -449,3 +449,33 @@ class LinkURLMixin(BaseLinkMixin):
         if self.content_object and self == self.content_object:
             from django.core.exceptions import ValidationError
             raise ValidationError("An object should not link to itself.")
+
+
+class AttributeMixin(models.Model):
+    '''Mixin to give dict access to generic Attributes'''
+    attributes = generic.GenericRelation('Attribute')   
+
+    class Meta:
+        abstract = True
+
+    def _attributes(self):
+        return dict(
+            self.attributes.values_list('name', 'value')
+        )
+
+    def __getitem__(self, key):
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            return self._attributes()[key]
+
+    def __setitem__(self, key, value):
+        from .models import Attribute
+        try:
+            attr = self.attributes.get(name=key)
+        except Attribute.DoesNotExist:
+            attr = Attribute(name=key, content_object=self)
+        attr.value = value
+        attr.save()
+
+        del self._attributes
