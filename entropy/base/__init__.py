@@ -111,7 +111,7 @@ class BaseSlugMixin(object):
                     raw = self.name
                 self.slug = slugify(raw)
 
-                if SLUGIFY_UNIQUELY:
+                if self.SLUGIFY_UNIQUELY:
                     pass
                     # XXX implement
                     # self.slug = SlugifyUniquely(self._meta.module, self.title)
@@ -453,7 +453,7 @@ class LinkURLMixin(BaseLinkMixin):
 
 class AttributeMixin(models.Model):
     '''Mixin to give dict access to generic Attributes'''
-    attributes = generic.GenericRelation('Attribute')   
+    attributes = generic.GenericRelation('Attribute')
 
     class Meta:
         abstract = True
