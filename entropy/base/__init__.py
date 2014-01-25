@@ -1,13 +1,13 @@
 import datetime
 import functools
 
+
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.generic import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.template.defaultfilters import slugify
 
-from filebrowser.fields import FileBrowseField
 
 from ..fields import *
 from .. import settings as entropy_settings

@@ -1,12 +1,32 @@
-from django.db import models
-
-from filebrowser.fields import FileBrowseField
-
 import datetime
-
 import functools
 
+
+from django.core.exceptions import ImproperlyConfigured
+from django.db import models
+
+
+from .settings import USE_FILEBROWSER
+
+
 # Commonly used/shared field definitions
+
+
+if USE_FILEBROWSER:
+    try:
+        from filebrowser.fields import FileBrowseField
+    except ImportError:    
+        raise ImproperlyConfigured("FileBrowser is being used however not installed")
+
+    ImageBrowseField = functools.partial(
+        FileBrowseField,
+        max_length=1024,
+        format='image')
+else:
+    ImageBrowseField = functools.partial(
+        models.ImageField,
+        max_length=1024)
+
 
 DescriptionField = functools.partial(
     models.TextField,
@@ -38,10 +58,6 @@ PriceField = functools.partial(
     decimal_places=2,
     max_digits=10)
 
-ImageBrowseField = functools.partial(
-    FileBrowseField,
-    max_length=1024,
-    format='image')
 
 EnabledField = functools.partial(
     models.BooleanField,

@@ -1,11 +1,18 @@
 from django.db import models
 from django.contrib.contenttypes import generic
 
-from filebrowser.fields import FileBrowseField
 
-from .fields import EnabledField
+from .fields import EnabledField, ImageBrowseField
 from .base import GenericMixin
+from .settings import USE_FILEBROWSER
 
+
+image_kwargs = {
+    'blank': False,
+    'max_length':1024,
+    'null':True,
+    'help_text':'Click thumbnail to view ful size image'
+}
 
 class Image(GenericMixin):
 
@@ -14,13 +21,17 @@ class Image(GenericMixin):
     """
     # gfk
 
-    image = FileBrowseField(
-        "Image file",
-        blank=False,
-        directory="images", # Alter this to /<parent_model>/
-        max_length=1024,
-        null=True,
-        help_text="Click thumbnail to view ful size image.")
+    if USE_FILEBROWSER:
+        image_kwargs.update({
+            'directory': 'images'
+            })                
+    else:
+        image_kwargs.update({
+            'upload_to': 'images'
+            })
+
+    image = ImageBrowseField("Image file", **image_kwargs)
+
 
     caption = models.TextField(blank=True)
 
@@ -47,12 +58,6 @@ class Image(GenericMixin):
         )
 
     def __unicode__(self):
-        # Returns the image path for use with Sorl
-        # if hasattr(settings, 'USE_CDN') and settings.USE_CDN:
-        #     # If from CDN, use the full URL.  This will use the faster URLStorage in Sorl
-        #     return '%s%s' % (
-        #         settings.MEDIA_URL,
-        #         self._path)
         return self._path
 
     # Purge related item's cache on change
