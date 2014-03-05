@@ -58,7 +58,7 @@ PriceField = functools.partial(
     decimal_places=2,
     max_digits=10)
 
-
 EnabledField = functools.partial(
     models.BooleanField,
+    default=False,
     db_index=True)
