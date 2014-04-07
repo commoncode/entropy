@@ -303,7 +303,7 @@ class PublishingMixin(StartEndMixin, EnabledMixin):
     Published Mixin, depends on EnabledMixin, StartEndMixin
     """
 
-    publish = models.BooleanField()
+    publish = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
