@@ -61,4 +61,5 @@ PriceField = functools.partial(
 
 EnabledField = functools.partial(
     models.BooleanField,
+    default=False,
     db_index=True)
