@@ -286,7 +286,7 @@ class EnabledManager(models.Manager):
 
 class EnabledMixin(models.Model):
 
-    enabled = models.BooleanField()
+    enabled = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
