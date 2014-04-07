@@ -50,7 +50,7 @@ class Image(GenericMixin):
         editable=False,
         max_length=1024)
 
-    enabled = EnabledField()
+    enabled = EnabledField(default=False)
 
     class Meta:
         ordering = (
