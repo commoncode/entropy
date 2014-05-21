@@ -284,6 +284,7 @@ class PublishingStatusMixin(models.Model):
     class Meta:
         abstract = True
 
+
 class EnabledManager(models.Manager):
     def enabled(self):
         '''Return only models which are enabled'''
@@ -297,6 +298,8 @@ class EnabledManager(models.Manager):
 class EnabledMixin(models.Model):
 
     enabled = EnabledField()
+
+    # @@@ TODO add the enabled pass through manager
 
     class Meta:
         abstract = True
@@ -313,7 +316,11 @@ class PublishingMixin(StartEndMixin, EnabledMixin):
     Published Mixin, depends on EnabledMixin, StartEndMixin
     '''
 
+<<<<<<< HEAD
     publish = EnabledField()
+=======
+    publish = models.BooleanField(default=False)
+>>>>>>> bc6f652c88ea384c4d272a74fb0cc7a32ba8c002
 
     class Meta:
         abstract = True
