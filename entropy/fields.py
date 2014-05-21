@@ -15,8 +15,8 @@ from .settings import USE_FILEBROWSER
 if USE_FILEBROWSER:
     try:
         from filebrowser.fields import FileBrowseField
-    except ImportError:    
-        raise ImproperlyConfigured("FileBrowser is being used however not installed")
+    except ImportError:
+        raise ImproperlyConfigured("USE_FILEBROWSER is set to True however Filebrowser is not installed")
 
     ImageBrowseField = functools.partial(
         FileBrowseField,
