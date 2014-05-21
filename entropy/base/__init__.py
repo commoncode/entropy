@@ -33,11 +33,11 @@ class GenericMixin(models.Model):
 # Text & Content Mixins
 
 class NameMixin(models.Model):
-    """
+    '''
     Name mixin
 
     Should not be used with TitleMixin
-    """
+    '''
 
     name = models.CharField(
         max_length=1024)
@@ -77,11 +77,11 @@ class TextMixin(models.Model):
 
 
 class TitleMixin(models.Model):
-    """
+    '''
     Title mixin.
 
     Should not be used w/ NameMixin
-    """
+    '''
 
     title = TitleField()
 
@@ -95,31 +95,40 @@ class TitleMixin(models.Model):
 
 
 class BaseSlugMixin(object):
-    """
-    SlugMixin typically depends on TitleMixin to
-    create slugs from.  If title is not available
-    Name will be attempted.
-    """
+    '''
+    SlugMixin works with title or name field provide by
+    TitleMixin or NameMixin or by hand.
 
-    SLUGIFY_UNIQUELY = False
+    If neither of those fields exist then the operation passes through
+    silently, allowing any other database errors to propagate.
+
+    '''
+
 
     def save(self, *args, **kwargs):
         if not self.id and not self.slug:
-            try:
-                raw = getattr(self, 'title', None)
-                if not raw:
-                    raw = self.name
-                self.slug = slugify(raw)
 
-                if self.SLUGIFY_UNIQUELY:
-                    pass
-                    # XXX implement
-                    # self.slug = SlugifyUniquely(self._meta.module, self.title)
-            except AttributeError:
+            if hasattr(self, 'title'):
+                sluggable = getattr(self, 'title', None)
+            if hasattr(self, 'name'):
+                sluggable = getattr(self, 'name', None)
+
+            if sluggable is not None:
+                self.slug = self.slugify_uniquely(sluggable)
+            else:
                 pass
-                # XXX implement
-                # raise Exception("title or name field required for SlugMixin")
+
         super(BaseSlugMixin, self).save(*args, **kwargs)
+
+    def slugify_uniquely(self, sluggable):
+
+        model = self.__class__
+        slug = slug_prefix = slugify(sluggable)
+        index = 0
+        while model.objects.filter(slug=slug).exists():
+            index += 1
+            slug = slug_prefix + '-' + str(index)
+        return slug
 
 
 class SlugMixin(BaseSlugMixin, models.Model):
@@ -140,9 +149,9 @@ class SlugUniqueMixin(BaseSlugMixin, models.Model):
 
 # Meta & Status Mixins
 
-"""
+'''
     HTML Metadata Mixin - for all those groovy HTML meta tags that can be important for SEO
-"""
+'''
 class MetadataMixin(models.Model):
     meta_title = models.CharField(max_length=255, blank=True, null=True)
     meta_description = models.CharField(max_length=255, blank=True, null=True)
@@ -150,6 +159,7 @@ class MetadataMixin(models.Model):
 
     class Meta:
         abstract = True
+
 
 class CreatedMixin(models.Model):
 
@@ -218,16 +228,16 @@ class StartEndBaseMixin(models.Model):
     class Meta:
         abstract = True
 
-    def save(self, *args, **kwargs):
-        """
-        Validate start and end fields
-        """
-        if self.end:
-            if self.start > self.end:
-                pass
-                # make this work or move it to a Form?
-                # raise ValidationError("'end' should not be before 'start'")
-        super(StartEndBaseMixin, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     '''
+    #     Validate start and end fields
+    #     '''
+    #     if self.end:
+    #         if self.start > self.end:
+    #             pass
+    #             # make this work or move it to a Form?
+    #             # raise ValidationError("'end' should not be before 'start'")
+    #     super(StartEndBaseMixin, self).save(*args, **kwargs)
 
 
 class StartEndMixin(StartEndBaseMixin):
@@ -286,7 +296,7 @@ class EnabledManager(models.Manager):
 
 class EnabledMixin(models.Model):
 
-    enabled = models.BooleanField()
+    enabled = EnabledField()
 
     class Meta:
         abstract = True
@@ -299,11 +309,11 @@ class PublishingManager(models.Manager):
 
 
 class PublishingMixin(StartEndMixin, EnabledMixin):
-    """
+    '''
     Published Mixin, depends on EnabledMixin, StartEndMixin
-    """
+    '''
 
-    publish = models.BooleanField()
+    publish = EnabledField()
 
     class Meta:
         abstract = True
@@ -346,7 +356,7 @@ class PriorityMixin(models.Model):
 
 
 class ImageMixin(models.Model):
-    """
+    '''
     Super neat ImageMixin model.
 
     Apply this to the model that the Image model is relating
@@ -371,7 +381,7 @@ class ImageMixin(models.Model):
         {% endthumbnail %}
     {% endfor %}
     {% endwith %}
-    """
+    '''
     image_set = GenericRelation('entropy.Image')
 
     class Meta:
@@ -414,10 +424,10 @@ class BaseLinkMixin(models.Model):
 
 
 class LinkURLMixin(BaseLinkMixin):
-    """
+    '''
     Class for generating get_absolute_url from either the
     linked object, or the overriding url field
-    """
+    '''
 
     content_type = models.ForeignKey(
         'contenttypes.ContentType',
