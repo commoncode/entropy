@@ -316,11 +316,7 @@ class PublishingMixin(StartEndMixin, EnabledMixin):
     Published Mixin, depends on EnabledMixin, StartEndMixin
     '''
 
-<<<<<<< HEAD
     publish = EnabledField()
-=======
-    publish = models.BooleanField(default=False)
->>>>>>> bc6f652c88ea384c4d272a74fb0cc7a32ba8c002
 
     class Meta:
         abstract = True
